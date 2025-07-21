@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geoportal Oceanpact</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.css" crossorigin="" />
+</head>
+
+<body>
+    <!-- Header/Cabeçalho -->
+    <header id="header">
+        <div class="header-container">
+            <!-- Logo e Título -->
+            <div class="logo-section">
+                <div class="logo">
+                    <img src="assets/img/240801-OCEmarca_bolinhas_branco.png" alt="OceanPact Logo" class="logo-icon">
+                    <h1>Geoportal</h1>
+                </div>
+            </div>
+
+            <!-- Controles do Header -->
+            <div class="header-controls">
+                <!-- Busca -->
+                <div class="search-container">
+                    <input type="text" id="search-input" placeholder="Buscar camadas..." onkeyup="searchLayers(this.value)">
+                    <button class="search-btn" onclick="clearSearch()">
+                        <span>🔍</span>
+                    </button>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="toggleSidebar()" title="Mostrar/Ocultar Camadas">
+                        <span>📋</span>
+                    </button>
+                    <button class="action-btn" onclick="resetAllLayers()" title="Limpar todas as camadas">
+                        <span>🔄</span>
+                    </button>
+                    <button class="action-btn" onclick="toggleFullscreen()" title="Tela cheia">
+                        <span>⛶</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Barra Lateral de Camadas -->
+    <div id="sidebar">
+        <h2>Lista de Camadas</h2>
+
+        <!-- Classe: Limites Territoriais -->
+        <div class="layer-class">
+            <button class="class-toggle" onclick="toggleClass('limites-territoriais')">
+                <span class="toggle-icon">▼</span> Limites Territoriais
+            </button>
+            <div id="limites-territoriais" class="layer-groups">
+
+                <!-- Subgrupo: Divisões Administrativas -->
+                <div class="layer-subgroup">
+                    <button class="subgroup-toggle" onclick="toggleSubgroup('divisoes-admin')">
+                        <span class="toggle-icon">▼</span> Divisões Administrativas
+                    </button>
+                    <div id="divisoes-admin" class="shapefile-list">
+                        <div class="shapefile-item">
+                            <input type="checkbox" id="municipios-layer" onchange="toggleLayer('municipios')">
+                            <label for="municipios-layer">Municípios Costeiros</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Classe: Dados Ambientais -->
+        <div class="layer-class">
+            <button class="class-toggle" onclick="toggleClass('dados-ambientais')">
+                <span class="toggle-icon">▼</span> Dados Ambientais
+            </button>
+            <div id="dados-ambientais" class="layer-groups">
+
+                <!-- Subgrupo: Batimetria -->
+                <div class="layer-subgroup">
+                    <button class="subgroup-toggle" onclick="toggleSubgroup('batimetria-group')">
+                        <span class="toggle-icon">▼</span> Batimetria
+                    </button>
+                    <div id="batimetria-group" class="shapefile-list">
+                        <div class="shapefile-item">
+                            <input type="checkbox" id="batimetria-layer" onchange="toggleLayer('batimetria')">
+                            <label for="batimetria-layer">Batimetria</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subgrupo: Hidrografia -->
+                <div class="layer-subgroup">
+                    <button class="subgroup-toggle" onclick="toggleSubgroup('hidrografia')">
+                        <span class="toggle-icon">▼</span> Hidrografia
+                    </button>
+                    <div id="hidrografia" class="shapefile-list">
+                        <div class="shapefile-item">
+                            <input type="checkbox" id="foz-rios-layer" onchange="toggleLayer('foz-rios')">
+                            <label for="foz-rios-layer">Foz de Rios</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subgrupo:Ambiental -->
+                <div class="layer-subgroup">
+                    <button class="subgroup-toggle" onclick="toggleSubgroup('ambiental')">
+                        <span class="toggle-icon">▼</span> Meio Ambiente
+                    </button>
+                    <div id="ambiental" class="shapefile-list">
+                        <div class="shapefile-item">
+                            <input type="checkbox" id="sensibilidade-litoral-layer"
+                                onchange="toggleLayer('sensibilidade-litoral')" checked>
+                            <label for="sensibilidade-litoral-layer">Índice de Sensibilidade do Litoral</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.js" crossorigin=""></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
