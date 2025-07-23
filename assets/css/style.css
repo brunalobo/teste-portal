@@ -1,5 +1,7 @@
-/* Reset e configurações gerais */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+/* ========================================
+   IMPORTAÇÕES E RESET
+======================================== */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
 
 * {
     margin: 0;
@@ -8,39 +10,38 @@
 }
 
 body {
-    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    padding: 0;
+    font-family: 'Poppins', sans-serif;
     height: 100vh;
     overflow: hidden;
-    padding-top: 60px; /* Espaço para o header fixo */
+    padding-top: 60px;
 }
 
-/* HEADER STYLES */
+/* ========================================
+   HEADER
+======================================== */
 #header {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
-    height: 60px;
+    height: 70px;
     background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid #e9ecef;
     z-index: 1001;
     display: flex;
     align-items: center;
-    border-bottom: 1px solid #e9ecef;
 }
 
 .header-container {
     width: 100%;
-    max-width: 100%;
     padding: 0 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-/* Logo Section */
+/* Logo */
 .logo-section {
     display: flex;
     align-items: center;
@@ -53,9 +54,6 @@ body {
     gap: 15px;
     color: #2c3e50;
     text-decoration: none;
-    padding: 8px 12px;
-    border-radius: 8px;
-    transition: all 0.3s ease;
 }
 
 .logo-icon {
@@ -68,7 +66,6 @@ body {
     font-size: 1.3em;
     font-weight: 500;
     margin: 0;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 /* Header Controls */
@@ -81,8 +78,6 @@ body {
 /* Search */
 .search-container {
     position: relative;
-    display: flex;
-    align-items: center;
 }
 
 #search-input {
@@ -90,14 +85,9 @@ body {
     border: 1px solid #e9ecef;
     border-radius: 20px;
     background: #f8f9fa;
-    color: #2c3e50;
     font-size: 14px;
     width: 200px;
     transition: all 0.3s ease;
-}
-
-#search-input::placeholder {
-    color: #6c757d;
 }
 
 #search-input:focus {
@@ -110,13 +100,21 @@ body {
 
 .search-btn {
     position: absolute;
-    right: 5px;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     background: none;
     border: none;
     color: #6c757d;
     cursor: pointer;
-    padding: 5px;
+    padding: 6px;
     border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
     transition: all 0.2s ease;
 }
 
@@ -154,180 +152,105 @@ body {
     box-shadow: 0 4px 12px rgba(52, 152, 219, 0.2);
 }
 
-/* Mobile Menu Toggle */
-.mobile-menu-toggle {
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-}
-
-.mobile-menu-toggle span {
-    width: 25px;
-    height: 3px;
-    background: white;
-    border-radius: 2px;
-    transition: all 0.3s ease;
-}
-
-/* Layout principal */
+/* ========================================
+   SIDEBAR FLUTUANTE
+======================================== */
 #sidebar {
     position: fixed;
-    left: 0;
-    top: 60px;
-    width: 350px;
-    min-width: 200px;
-    max-width: 600px;
-    height: calc(100vh - 60px);
-    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    left: 20px;
+    top: 80px;
+    width: 320px;
+    height: calc(100vh - 120px);
+    background: rgba(255, 255, 255, 0.95);
     color: #2c3e50;
     overflow: hidden;
     z-index: 1000;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    transition: width 0.3s ease, transform 0.3s ease;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+    transition: all 0.3s ease;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #e9ecef;
 }
 
-#sidebar.collapsed {
-    width: 60px;
+#sidebar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 #sidebar.hidden {
-    transform: translateX(-100%);
+    transform: translateX(-100%) translateY(-2px);
+    opacity: 0;
 }
 
-/* Botão de colapsar/expandir */
-.sidebar-toggle-btn {
-    position: absolute;
-    right: -15px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: #3498db;
-    border: 2px solid #fff;
-    color: white;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-    transition: all 0.3s ease;
-    z-index: 1001;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.sidebar-toggle-btn:hover {
-    background: #2980b9;
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-#sidebar.collapsed .sidebar-toggle-btn {
-    right: -15px;
-}
-
-#sidebar.collapsed .sidebar-toggle-btn #toggle-icon {
-    transform: rotate(180deg);
-}
-
-/* Conteúdo do sidebar */
+/* Conteúdo */
 .sidebar-content {
     flex: 1;
     overflow-y: auto;
-    padding: 60px 0 20px 0;
+    padding: 20px 16px;
     transition: opacity 0.3s ease;
-}
-
-#sidebar.collapsed .sidebar-content {
-    opacity: 0;
-    pointer-events: none;
-}
-
-/* Handle de redimensionamento */
-.resize-handle {
-    position: absolute;
-    right: 0;
-    top: 0;
-    width: 4px;
-    height: 100%;
-    background: rgba(52, 152, 219, 0.3);
-    cursor: ew-resize;
-    transition: background 0.3s ease;
-}
-
-.resize-handle:hover {
-    background: rgba(52, 152, 219, 0.6);
-}
-
-.resize-handle.resizing {
-    background: rgba(52, 152, 219, 0.8);
-}
-
-#sidebar.collapsed .resize-handle {
-    display: none;
-}
-
-.sidebar-content::-webkit-scrollbar {
-    width: 8px;
-}
-
-.sidebar-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-}
-
-.sidebar-content::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-}
-
-.sidebar-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 0, 0, 0.3);
 }
 
 .sidebar-content h2 {
     text-align: center;
-    margin-bottom: 25px;
-    font-size: 1.4em;
+    margin-bottom: 20px;
+    font-size: 1.2em;
     color: #2c3e50;
     font-weight: 600;
-    padding: 0 20px;
-    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-    padding-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(52, 152, 219, 0.2);
 }
 
-/* Mapa */
+/* Scrollbar */
+.sidebar-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(52, 152, 219, 0.3);
+    border-radius: 3px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(52, 152, 219, 0.5);
+}
+
+/* Handle de Redimensionamento - Removido para simplicidade */
+
+/* ========================================
+   MAPA
+======================================== */
 #map {
     position: fixed;
-    left: 350px;
+    left: 0;
     top: 60px;
     right: 0;
     height: calc(100vh - 60px);
-    transition: all 0.3s ease;
     background: #f8f9fa;
+    transition: all 0.3s ease;
 }
 
 #map.full-width {
     left: 0;
 }
 
-/* Estrutura hierárquica do menu */
+/* ========================================
+   MENU HIERÁRQUICO
+======================================== */
 
-/* Classe principal (nível 1) */
+/* Classe Principal (Nível 1) */
 .layer-class {
-    margin-bottom: 8px;
-    border-radius: 8px;
+    margin: 0 0 10px 0;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(52, 152, 219, 0.2);
     overflow: hidden;
-    margin: 0 15px 8px 15px;
-    background: rgba(0, 0, 0, 0.02);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .class-toggle {
@@ -362,7 +285,7 @@ body {
     transform: rotate(-90deg);
 }
 
-/* Container dos subgrupos */
+/* Container dos Subgrupos */
 .layer-groups {
     background: rgba(0, 0, 0, 0.02);
     transition: all 0.3s ease;
@@ -375,7 +298,7 @@ body {
     opacity: 0;
 }
 
-/* Subgrupo (nível 2) */
+/* Subgrupo (Nível 2) */
 .layer-subgroup {
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
@@ -416,7 +339,7 @@ body {
     transform: rotate(-90deg);
 }
 
-/* Lista de shapefiles (nível 3) */
+/* Lista de Shapefiles (Nível 3) */
 .shapefile-list {
     background: rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
@@ -468,30 +391,9 @@ body {
     font-weight: 500;
 }
 
-/* Animações */
-@keyframes slideDown {
-    from {
-        max-height: 0;
-        opacity: 0;
-    }
-    to {
-        max-height: 1000px;
-        opacity: 1;
-    }
-}
-
-@keyframes slideUp {
-    from {
-        max-height: 1000px;
-        opacity: 1;
-    }
-    to {
-        max-height: 0;
-        opacity: 0;
-    }
-}
-
-/* Estados ativos */
+/* ========================================
+   ESTADOS ATIVOS
+======================================== */
 .layer-class.active {
     background: rgba(52, 152, 219, 0.1);
     border-color: rgba(52, 152, 219, 0.3);
@@ -501,7 +403,6 @@ body {
     background: rgba(52, 152, 219, 0.2);
 }
 
-/* Indicadores visuais para camadas ativas */
 .shapefile-item.layer-active {
     background: rgba(46, 204, 113, 0.1);
     border-left-color: #2ecc71;

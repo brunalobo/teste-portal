@@ -1,22 +1,14 @@
-// Inicialização do mapa
 let map;
 let layersData = {};
 let sidebarVisible = true;
-let sidebarCollapsed = false;
-let isResizing = false;
-let currentSidebarWidth = 350;
 
-// Configuração inicial
 document.addEventListener('DOMContentLoaded', function() {
     initializeMap();
     initializeMenuState();
     initializeHeader();
-    initializeResizable();
 });
 
-// Inicializar funcionalidades do header
 function initializeHeader() {
-    // Configurar busca em tempo real
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('input', function(e) {
@@ -25,40 +17,70 @@ function initializeHeader() {
     }
 }
 
-// Inicializar o mapa MapLibre
 function initializeMap() {
     map = new maplibregl.Map({
         container: 'map',
         style: {
             version: 8,
             sources: {
-                'osm': {
+                'esri-dark': {
                     type: 'raster',
-                    tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                    tiles: [
+                        'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+                    ],
                     tileSize: 256,
-                    attribution: '© OpenStreetMap contributors'
+                    attribution: 'Tiles © Esri — Esri, DeLorme, NAVTEQ'
                 }
             },
             layers: [
                 {
-                    id: 'osm',
+                    id: 'esri-dark-layer',
                     type: 'raster',
-                    source: 'osm'
+                    source: 'esri-dark'
                 }
             ]
         },
-        center: [-45.0, -15.0], // Centro aproximado do Brasil
-        zoom: 4
+        center: [-43.2, -22.9], // exemplo: centro do Rio de Janeiro
+        zoom: 10
     });
 
-    // Adicionar controles de navegação
     map.addControl(new maplibregl.NavigationControl());
     map.addControl(new maplibregl.ScaleControl());
+
+    map.on('load', function() {
+        map.on('click', function(e) {
+            const features = map.queryRenderedFeatures(e.point);
+            
+            if (features.length > 0) {
+                const feature = features[0];
+                
+                new maplibregl.Popup()
+                    .setLngLat(e.lngLat)
+                    .setHTML(`
+                        <div style="font-family: Poppins, sans-serif;">
+                            <h4 style="margin: 0 0 10px 0; color: #2c3e50;">
+                                ${feature.properties.name || 'Camada'}
+                            </h4>
+                            <p style="margin: 0; font-size: 12px; color: #7f8c8d;">
+                                ${feature.properties.description || 'Clique para mais informações'}
+                            </p>
+                        </div>
+                    `)
+                    .addTo(map);
+            }
+        });
+        
+        map.on('mouseenter', function() {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        
+        map.on('mouseleave', function() {
+            map.getCanvas().style.cursor = '';
+        });
+    });
 }
 
-// Inicializar estado do menu (alguns grupos expandidos por padrão)
 function initializeMenuState() {
-    // Expandir algumas classes por padrão
     const defaultExpanded = ['dados-ambientais'];
     defaultExpanded.forEach(classId => {
         const element = document.getElementById(classId);
@@ -67,7 +89,6 @@ function initializeMenuState() {
         }
     });
 
-    // Expandir alguns subgrupos por padrão
     const defaultSubgroupsExpanded = ['ambiental'];
     defaultSubgroupsExpanded.forEach(subgroupId => {
         const element = document.getElementById(subgroupId);
@@ -77,7 +98,6 @@ function initializeMenuState() {
     });
 }
 
-// Função para alternar classes principais
 function toggleClass(classId) {
     const element = document.getElementById(classId);
     const button = element.previousElementSibling;
@@ -93,7 +113,6 @@ function toggleClass(classId) {
     }
 }
 
-// Função para alternar subgrupos
 function toggleSubgroup(subgroupId) {
     const element = document.getElementById(subgroupId);
     const button = element.previousElementSibling;
@@ -109,7 +128,6 @@ function toggleSubgroup(subgroupId) {
     }
 }
 
-// Função para alternar visibilidade das camadas
 function toggleLayer(layerId) {
     const checkbox = document.getElementById(layerId + '-layer');
     const isVisible = checkbox.checked;
@@ -118,25 +136,19 @@ function toggleLayer(layerId) {
     if (isVisible) {
         addLayerToMap(layerId);
         layerItem.classList.add('layer-active');
-        console.log(`Camada ${layerId} ativada`);
     } else {
         removeLayerFromMap(layerId);
         layerItem.classList.remove('layer-active');
-        console.log(`Camada ${layerId} desativada`);
     }
 }
 
-// Adicionar camada ao mapa
 function addLayerToMap(layerId) {
-    // Verificar se a camada já existe
     if (map.getLayer(layerId)) {
         map.setLayoutProperty(layerId, 'visibility', 'visible');
         return;
     }
 
-    // Configurações específicas para cada tipo de camada
     const layerConfigs = {
-        // Limites Territoriais
         'municipios': {
             type: 'fill',
             paint: {
@@ -145,38 +157,13 @@ function addLayerToMap(layerId) {
                 'fill-outline-color': '#2980b9'
             }
         },
-        'zee': {
+        'batimetria': {
             type: 'fill',
             paint: {
-                'fill-color': '#3498db',
-                'fill-opacity': 0.1,
-                'fill-outline-color': '#2980b9'
+                'fill-color': '#2c3e50',
+                'fill-opacity': 0.5
             }
         },
-        'mar-territorial': {
-            type: 'fill',
-            paint: {
-                'fill-color': '#2ecc71',
-                'fill-opacity': 0.2,
-                'fill-outline-color': '#27ae60'
-            }
-        },
-        
-        // Dados Ambientais - Batimetria
-        'batimetria-cprm': {
-            type: 'raster',
-            paint: {
-                'raster-opacity': 0.7
-            }
-        },
-        'batimetria-gebco': {
-            type: 'raster',
-            paint: {
-                'raster-opacity': 0.7
-            }
-        },
-        
-        // Dados Ambientais - Hidrografia
         'foz-rios': {
             type: 'circle',
             paint: {
@@ -186,8 +173,6 @@ function addLayerToMap(layerId) {
                 'circle-stroke-width': 1
             }
         },
-        
-        // Dados Ambientais - Meio Ambiente
         'sensibilidade-litoral': {
             type: 'fill',
             paint: {
@@ -204,16 +189,13 @@ function addLayerToMap(layerId) {
         }
     };
 
-    // Para este exemplo, vamos simular dados (em um projeto real, você carregaria shapefiles)
     if (!map.getSource(layerId)) {
-        // Adicionar fonte de dados simulada
         map.addSource(layerId, {
             type: 'geojson',
             data: generateSampleData(layerId)
         });
     }
 
-    // Adicionar camada com configuração específica
     const config = layerConfigs[layerId] || {
         type: 'fill',
         paint: {
@@ -232,14 +214,12 @@ function addLayerToMap(layerId) {
         }
     });
 
-    // Armazenar informações da camada
     layersData[layerId] = {
         visible: true,
         config: config
     };
 }
 
-// Remover camada do mapa
 function removeLayerFromMap(layerId) {
     if (map.getLayer(layerId)) {
         map.setLayoutProperty(layerId, 'visibility', 'none');
@@ -247,17 +227,13 @@ function removeLayerFromMap(layerId) {
     }
 }
 
-// Gerar dados de exemplo (substitua por carregamento real de shapefiles)
 function generateSampleData(layerId) {
-    // Esta é uma função de exemplo - em um projeto real você carregaria os shapefiles
     const sampleFeatures = {
         type: 'FeatureCollection',
         features: []
     };
 
-    // Gerar algumas features de exemplo baseadas no tipo de camada
     if (layerId === 'foz-rios') {
-        // Pontos de exemplo para foz de rios
         for (let i = 0; i < 5; i++) {
             sampleFeatures.features.push({
                 type: 'Feature',
@@ -271,28 +247,7 @@ function generateSampleData(layerId) {
                 }
             });
         }
-    } else if (layerId.includes('batimetria')) {
-        // Para batimetria, criar um grid raster simulado
-        sampleFeatures.features.push({
-            type: 'Feature',
-            geometry: {
-                type: 'Polygon',
-                coordinates: [[
-                    [-50, -20],
-                    [-40, -20],
-                    [-40, -10],
-                    [-50, -10],
-                    [-50, -20]
-                ]]
-            },
-            properties: {
-                name: layerId,
-                description: `Dados de ${layerId}`,
-                depth: Math.floor(Math.random() * 1000) + 10
-            }
-        });
     } else {
-        // Polígonos de exemplo para outras camadas
         sampleFeatures.features.push({
             type: 'Feature',
             geometry: {
@@ -316,101 +271,22 @@ function generateSampleData(layerId) {
     return sampleFeatures;
 }
 
-// Função para buscar camadas
-function searchLayers(searchTerm) {
-    const items = document.querySelectorAll('.shapefile-item');
-    const term = searchTerm.toLowerCase();
-    
-    items.forEach(item => {
-        const label = item.querySelector('label').textContent.toLowerCase();
-        if (label.includes(term)) {
-            item.style.display = 'flex';
-            // Expandir grupos pai se necessário
-            let parent = item.closest('.layer-groups');
-            while (parent) {
-                parent.classList.remove('collapsed');
-                parent = parent.parentElement.closest('.layer-groups');
-            }
-        } else {
-            item.style.display = 'none';
-        }
-    });
-}
-
-// Função para resetar todas as camadas
-function resetAllLayers() {
-    const checkboxes = document.querySelectorAll('.shapefile-item input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            checkbox.checked = false;
-            const layerId = checkbox.id.replace('-layer', '');
-            removeLayerFromMap(layerId);
-            checkbox.closest('.shapefile-item').classList.remove('layer-active');
-        }
-    });
-}
-
-// Adicionar funcionalidades extras quando o mapa estiver carregado
-map.on('load', function() {
-    console.log('Mapa carregado com sucesso!');
-    
-    // Adicionar popup para interação com as camadas
-    map.on('click', function(e) {
-        const features = map.queryRenderedFeatures(e.point);
-        
-        if (features.length > 0) {
-            const feature = features[0];
-            
-            new maplibregl.Popup()
-                .setLngLat(e.lngLat)
-                .setHTML(`
-                    <div style="font-family: Arial, sans-serif;">
-                        <h4 style="margin: 0 0 10px 0; color: #2c3e50;">
-                            ${feature.properties.name || 'Camada'}
-                        </h4>
-                        <p style="margin: 0; font-size: 12px; color: #7f8c8d;">
-                            ${feature.properties.description || 'Clique para mais informações'}
-                        </p>
-                    </div>
-                `)
-                .addTo(map);
-        }
-    });
-    
-    // Mudar cursor quando hover sobre features
-    map.on('mouseenter', function() {
-        map.getCanvas().style.cursor = 'pointer';
-    });
-    
-    map.on('mouseleave', function() {
-        map.getCanvas().style.cursor = '';
-    });
-});
-
-// FUNÇÕES DO HEADER
-
-// Função de busca melhorada
 function searchLayers(searchTerm) {
     const items = document.querySelectorAll('.shapefile-item');
     const term = searchTerm.toLowerCase().trim();
     
     if (term === '') {
-        // Mostrar todos os itens e resetar grupos
         items.forEach(item => {
             item.style.display = 'flex';
         });
         return;
     }
     
-    let hasResults = false;
-    
     items.forEach(item => {
         const label = item.querySelector('label').textContent.toLowerCase();
         if (label.includes(term)) {
             item.style.display = 'flex';
-            hasResults = true;
             
-            // Expandir grupos pai automaticamente
             let parent = item.closest('.layer-groups');
             while (parent) {
                 parent.classList.remove('collapsed');
@@ -419,7 +295,6 @@ function searchLayers(searchTerm) {
                 parent = parent.parentElement.closest('.layer-groups');
             }
             
-            // Expandir subgrupo
             let subgroup = item.closest('.shapefile-list');
             if (subgroup) {
                 subgroup.classList.remove('collapsed');
@@ -430,21 +305,14 @@ function searchLayers(searchTerm) {
             item.style.display = 'none';
         }
     });
-    
-    // Adicionar indicador visual se não houver resultados
-    if (!hasResults && term !== '') {
-        console.log('Nenhuma camada encontrada para:', term);
-    }
 }
 
-// Limpar busca
 function clearSearch() {
     const searchInput = document.getElementById('search-input');
     searchInput.value = '';
     searchLayers('');
 }
 
-// Alternar tela cheia
 function toggleFullscreen() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
@@ -455,116 +323,20 @@ function toggleFullscreen() {
     }
 }
 
-// Redimensionar mapa quando necessário
-function resizeMap() {
-    if (map) {
-        map.resize();
-    }
-}
-
-// FUNÇÕES DE REDIMENSIONAMENTO E COLAPSO DO SIDEBAR
-
-// Inicializar funcionalidade de redimensionamento
-function initializeResizable() {
-    const sidebar = document.getElementById('sidebar');
-    const resizeHandle = document.getElementById('resize-handle');
-    const map = document.getElementById('map');
-    
-    if (!resizeHandle) return;
-    
-    resizeHandle.addEventListener('mousedown', function(e) {
-        isResizing = true;
-        resizeHandle.classList.add('resizing');
-        document.body.style.cursor = 'ew-resize';
-        document.body.style.userSelect = 'none';
-        
-        const startX = e.clientX;
-        const startWidth = parseInt(document.defaultView.getComputedStyle(sidebar).width, 10);
-        
-        function doResize(e) {
-            if (!isResizing) return;
-            
-            const newWidth = startWidth + (e.clientX - startX);
-            const minWidth = 200;
-            const maxWidth = 600;
-            
-            if (newWidth >= minWidth && newWidth <= maxWidth) {
-                currentSidebarWidth = newWidth;
-                sidebar.style.width = newWidth + 'px';
-                map.style.left = newWidth + 'px';
-                
-                // Redimensionar o mapa
-                if (window.map) {
-                    setTimeout(() => window.map.resize(), 10);
-                }
-            }
-        }
-        
-        function stopResize() {
-            isResizing = false;
-            resizeHandle.classList.remove('resizing');
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-            document.removeEventListener('mousemove', doResize);
-            document.removeEventListener('mouseup', stopResize);
-        }
-        
-        document.addEventListener('mousemove', doResize);
-        document.addEventListener('mouseup', stopResize);
-    });
-}
-
-// Alternar colapso do sidebar
-function toggleSidebarCollapse() {
-    const sidebar = document.getElementById('sidebar');
-    const map = document.getElementById('map');
-    const toggleIcon = document.getElementById('toggle-icon');
-    
-    sidebarCollapsed = !sidebarCollapsed;
-    
-    if (sidebarCollapsed) {
-        sidebar.classList.add('collapsed');
-        map.style.left = '60px';
-        toggleIcon.textContent = '›';
-    } else {
-        sidebar.classList.remove('collapsed');
-        map.style.left = currentSidebarWidth + 'px';
-        toggleIcon.textContent = '‹';
-    }
-    
-    // Redimensionar o mapa após a transição
-    setTimeout(() => {
-        if (window.map) {
-            window.map.resize();
-        }
-    }, 300);
-}
-
-// Atualizar função toggleSidebar existente
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
-    const map = document.getElementById('map');
     
     sidebarVisible = !sidebarVisible;
     
     if (sidebarVisible) {
         sidebar.classList.remove('hidden');
-        if (sidebarCollapsed) {
-            map.style.left = '60px';
-        } else {
-            map.style.left = currentSidebarWidth + 'px';
-        }
-        map.classList.remove('full-width');
     } else {
         sidebar.classList.add('hidden');
-        map.classList.add('full-width');
-        map.style.left = '0';
     }
     
-    // Redimensionar o mapa após a transição
     setTimeout(() => {
-        if (window.map) {
-            window.map.resize();
+        if (map) {
+            map.resize();
         }
     }, 300);
 }
