@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geoportal Oceanpact</title>
+    <title>Geoportal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
             <!-- Logo e Título -->
             <div class="logo-section">
                 <div class="logo">
-                    <img src="assets/img/240801-OCEmarca_bolinhas_branco.png" alt="OceanPact Logo" class="logo-icon">
+                    <img src="assets/img/240801-OCEmarca_bolinhas_azul.png" alt="OceanPact Logo" class="logo-icon">
                     <h1>Geoportal</h1>
                 </div>
             </div>
@@ -29,19 +29,11 @@
                 <!-- Busca -->
                 <div class="search-container">
                     <input type="text" id="search-input" placeholder="Buscar camadas..." onkeyup="searchLayers(this.value)">
-                    <button class="search-btn" onclick="clearSearch()">
-                        <span>🔍</span>
-                    </button>
+                    <button class="search-btn" onclick="clearSearch()"></button>
                 </div>
 
                 <!-- Botões de Ação -->
                 <div class="action-buttons">
-                    <button class="action-btn" onclick="toggleSidebar()" title="Mostrar/Ocultar Camadas">
-                        <span>📋</span>
-                    </button>
-                    <button class="action-btn" onclick="resetAllLayers()" title="Limpar todas as camadas">
-                        <span>🔄</span>
-                    </button>
                     <button class="action-btn" onclick="toggleFullscreen()" title="Tela cheia">
                         <span>⛶</span>
                     </button>
@@ -52,7 +44,13 @@
 
     <!-- Barra Lateral de Camadas -->
     <div id="sidebar">
-        <h2>Lista de Camadas</h2>
+        <!-- Botão de Colapsar/Expandir -->
+        <button class="sidebar-toggle-btn" onclick="toggleSidebarCollapse()" title="Recolher/Expandir Menu">
+            <span id="toggle-icon">‹</span>
+        </button>
+        
+        <div class="sidebar-content">
+            <h2>Lista de Camadas</h2>
 
         <!-- Classe: Limites Territoriais -->
         <div class="layer-class">
@@ -76,7 +74,7 @@
             </div>
         </div>
 
-        <!-- Classe: Dados Ambientais -->
+        <!-- Grupo: Dados Ambientais -->
         <div class="layer-class">
             <button class="class-toggle" onclick="toggleClass('dados-ambientais')">
                 <span class="toggle-icon">▼</span> Dados Ambientais
@@ -124,12 +122,15 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Handle de redimensionamento -->
+        <div class="resize-handle" id="resize-handle"></div>
     </div>
 
     <div id="map"></div>
 
     <script src="https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.js" crossorigin=""></script>
-    <script src="app.js"></script>
+    <script src="js/app.js"></script>
 </body>
 
 </html>

@@ -2,12 +2,16 @@
 let map;
 let layersData = {};
 let sidebarVisible = true;
+let sidebarCollapsed = false;
+let isResizing = false;
+let currentSidebarWidth = 350;
 
 // Configuração inicial
 document.addEventListener('DOMContentLoaded', function() {
     initializeMap();
     initializeMenuState();
     initializeHeader();
+    initializeResizable();
 });
 
 // Inicializar funcionalidades do header
@@ -385,30 +389,6 @@ map.on('load', function() {
 
 // FUNÇÕES DO HEADER
 
-// Alternar visibilidade do sidebar
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    const map = document.getElementById('map');
-    
-    sidebarVisible = !sidebarVisible;
-    
-    if (sidebarVisible) {
-        sidebar.classList.remove('hidden');
-        map.classList.remove('full-width');
-    } else {
-        sidebar.classList.add('hidden');
-        map.classList.add('full-width');
-    }
-    
-    // Redimensionar o mapa após a transição
-    setTimeout(() => {
-        if (map) {
-            map.getContainer().style.width = sidebarVisible ? 'calc(100% - 350px)' : '100%';
-            map.resize();
-        }
-    }, 300);
-}
-
 // Função de busca melhorada
 function searchLayers(searchTerm) {
     const items = document.querySelectorAll('.shapefile-item');
@@ -480,4 +460,111 @@ function resizeMap() {
     if (map) {
         map.resize();
     }
+}
+
+// FUNÇÕES DE REDIMENSIONAMENTO E COLAPSO DO SIDEBAR
+
+// Inicializar funcionalidade de redimensionamento
+function initializeResizable() {
+    const sidebar = document.getElementById('sidebar');
+    const resizeHandle = document.getElementById('resize-handle');
+    const map = document.getElementById('map');
+    
+    if (!resizeHandle) return;
+    
+    resizeHandle.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        resizeHandle.classList.add('resizing');
+        document.body.style.cursor = 'ew-resize';
+        document.body.style.userSelect = 'none';
+        
+        const startX = e.clientX;
+        const startWidth = parseInt(document.defaultView.getComputedStyle(sidebar).width, 10);
+        
+        function doResize(e) {
+            if (!isResizing) return;
+            
+            const newWidth = startWidth + (e.clientX - startX);
+            const minWidth = 200;
+            const maxWidth = 600;
+            
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                currentSidebarWidth = newWidth;
+                sidebar.style.width = newWidth + 'px';
+                map.style.left = newWidth + 'px';
+                
+                // Redimensionar o mapa
+                if (window.map) {
+                    setTimeout(() => window.map.resize(), 10);
+                }
+            }
+        }
+        
+        function stopResize() {
+            isResizing = false;
+            resizeHandle.classList.remove('resizing');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', doResize);
+            document.removeEventListener('mouseup', stopResize);
+        }
+        
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', stopResize);
+    });
+}
+
+// Alternar colapso do sidebar
+function toggleSidebarCollapse() {
+    const sidebar = document.getElementById('sidebar');
+    const map = document.getElementById('map');
+    const toggleIcon = document.getElementById('toggle-icon');
+    
+    sidebarCollapsed = !sidebarCollapsed;
+    
+    if (sidebarCollapsed) {
+        sidebar.classList.add('collapsed');
+        map.style.left = '60px';
+        toggleIcon.textContent = '›';
+    } else {
+        sidebar.classList.remove('collapsed');
+        map.style.left = currentSidebarWidth + 'px';
+        toggleIcon.textContent = '‹';
+    }
+    
+    // Redimensionar o mapa após a transição
+    setTimeout(() => {
+        if (window.map) {
+            window.map.resize();
+        }
+    }, 300);
+}
+
+// Atualizar função toggleSidebar existente
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const map = document.getElementById('map');
+    
+    sidebarVisible = !sidebarVisible;
+    
+    if (sidebarVisible) {
+        sidebar.classList.remove('hidden');
+        if (sidebarCollapsed) {
+            map.style.left = '60px';
+        } else {
+            map.style.left = currentSidebarWidth + 'px';
+        }
+        map.classList.remove('full-width');
+    } else {
+        sidebar.classList.add('hidden');
+        map.classList.add('full-width');
+        map.style.left = '0';
+    }
+    
+    // Redimensionar o mapa após a transição
+    setTimeout(() => {
+        if (window.map) {
+            window.map.resize();
+        }
+    }, 300);
 }
