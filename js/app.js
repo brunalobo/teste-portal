@@ -45,7 +45,10 @@ function initializeMap() {
     });
 
     map.addControl(new maplibregl.NavigationControl());
-    map.addControl(new maplibregl.ScaleControl());
+    map.addControl(new maplibregl.ScaleControl(), 'bottom-right');
+    
+    // Adicionar controles customizados
+    addCustomControls();
 
     map.on('load', function() {
         map.on('click', function(e) {
@@ -78,6 +81,237 @@ function initializeMap() {
             map.getCanvas().style.cursor = '';
         });
     });
+}
+
+// Função para adicionar controles customizados
+function addCustomControls() {
+    // Controle de Legenda
+    const legendControl = new LegendControl();
+    map.addControl(legendControl, 'top-right');
+    
+    // Controle de Camadas
+    const layersControl = new LayersControl();
+    map.addControl(layersControl, 'top-right');
+    
+    // Controle de Localização
+    const locationControl = new LocationControl();
+    map.addControl(locationControl, 'top-right');
+}
+
+// Classe para controle de Legenda
+class LegendControl {
+    onAdd(map) {
+        this.map = map;
+        this.container = document.createElement('div');
+        this.container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+        this.container.innerHTML = `
+            <button class="map-control-btn" title="Legenda" onclick="toggleLegend()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/>
+                </svg>
+            </button>
+        `;
+        return this.container;
+    }
+    
+    onRemove() {
+        this.container.parentNode.removeChild(this.container);
+        this.map = undefined;
+    }
+}
+
+// Classe para controle de Camadas
+class LayersControl {
+    onAdd(map) {
+        this.map = map;
+        this.container = document.createElement('div');
+        this.container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+        this.container.innerHTML = `
+            <button class="map-control-btn" title="Camadas" onclick="toggleLayersPanel()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/>
+                </svg>
+            </button>
+        `;
+        return this.container;
+    }
+    
+    onRemove() {
+        this.container.parentNode.removeChild(this.container);
+        this.map = undefined;
+    }
+}
+
+// Classe para controle de Localização
+class LocationControl {
+    onAdd(map) {
+        this.map = map;
+        this.container = document.createElement('div');
+        this.container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+        this.container.innerHTML = `
+            <button class="map-control-btn" title="Minha Localização" onclick="goToMyLocation()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
+                </svg>
+            </button>
+        `;
+        return this.container;
+    }
+    
+    onRemove() {
+        this.container.parentNode.removeChild(this.container);
+        this.map = undefined;
+    }
+}
+
+// Função para alternar a legenda
+function toggleLegend() {
+    let legendPanel = document.getElementById('legend-panel');
+    
+    if (!legendPanel) {
+        createLegendPanel();
+        legendPanel = document.getElementById('legend-panel');
+    }
+    
+    if (legendPanel.style.display === 'none' || !legendPanel.style.display) {
+        legendPanel.style.display = 'block';
+    } else {
+        legendPanel.style.display = 'none';
+    }
+}
+
+// Função para criar o painel de legenda
+function createLegendPanel() {
+    const legendPanel = document.createElement('div');
+    legendPanel.id = 'legend-panel';
+    legendPanel.className = 'map-panel legend-panel';
+    legendPanel.innerHTML = `
+        <div class="panel-header">
+            <h3>Legenda</h3>
+            <button onclick="closeLegend()" class="close-btn">×</button>
+        </div>
+        <div class="panel-content">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #3498db;"></div>
+                <span>Municípios</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #2c3e50;"></div>
+                <span>Batimetria</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color circle" style="background: #3498db;"></div>
+                <span>Foz dos Rios</span>
+            </div>
+            <div class="legend-group">
+                <h4>Sensibilidade do Litoral</h4>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2ecc71;"></div>
+                    <span>Baixa (1)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f1c40f;"></div>
+                    <span>Média (2)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e67e22;"></div>
+                    <span>Alta (3)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e74c3c;"></div>
+                    <span>Muito Alta (4)</span>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(legendPanel);
+}
+
+// Função para fechar a legenda
+function closeLegend() {
+    const legendPanel = document.getElementById('legend-panel');
+    if (legendPanel) {
+        legendPanel.style.display = 'none';
+    }
+}
+
+// Função para alternar o painel de camadas
+function toggleLayersPanel() {
+    const sidebar = document.getElementById('sidebar');
+    
+    if (sidebar.classList.contains('hidden')) {
+        sidebar.classList.remove('hidden');
+    } else {
+        sidebar.classList.add('hidden');
+    }
+    
+    setTimeout(() => {
+        if (map) {
+            map.resize();
+        }
+    }, 300);
+}
+
+// Função para ir para minha localização
+function goToMyLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const coords = [position.coords.longitude, position.coords.latitude];
+                
+                // Adicionar marcador de localização
+                if (map.getSource('user-location')) {
+                    map.getSource('user-location').setData({
+                        type: 'Point',
+                        coordinates: coords
+                    });
+                } else {
+                    map.addSource('user-location', {
+                        type: 'geojson',
+                        data: {
+                            type: 'Point',
+                            coordinates: coords
+                        }
+                    });
+                    
+                    map.addLayer({
+                        id: 'user-location',
+                        type: 'circle',
+                        source: 'user-location',
+                        paint: {
+                            'circle-radius': 8,
+                            'circle-color': '#007cbf',
+                            'circle-stroke-color': '#fff',
+                            'circle-stroke-width': 2
+                        }
+                    });
+                }
+                
+                // Centralizar o mapa na localização do usuário
+                map.flyTo({
+                    center: coords,
+                    zoom: 15,
+                    duration: 2000
+                });
+                
+                // Mostrar popup com informação
+                new maplibregl.Popup()
+                    .setLngLat(coords)
+                    .setHTML('<div style="font-family: Poppins, sans-serif;"><strong>Você está aqui!</strong></div>')
+                    .addTo(map);
+            },
+            function(error) {
+                alert('Erro ao obter localização: ' + error.message);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        alert('Geolocalização não é suportada pelo seu navegador.');
+    }
 }
 
 function initializeMenuState() {

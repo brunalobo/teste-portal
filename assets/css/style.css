@@ -17,6 +17,168 @@ body {
 }
 
 /* ========================================
+   AJUSTES DOS CONTROLES DO MAPA
+======================================== */
+
+/* Ajuste dos controles nativos do MapLibre para ficarem abaixo do header */
+.maplibregl-ctrl-top-left {
+    top: 80px !important;
+}
+
+.maplibregl-ctrl-top-right {
+    top: 80px !important;
+}
+
+/* ========================================
+   CONTROLES CUSTOMIZADOS DO MAPA
+======================================== */
+
+.map-control-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 4px;
+    color: #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    transition: all 0.2s ease;
+    width: 29px;
+    height: 29px;
+}
+
+.map-control-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #007cbf;
+}
+
+.map-control-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* ========================================
+   PAINEL DE LEGENDA
+======================================== */
+
+.map-panel {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 280px;
+    max-height: calc(100vh - 120px);
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(20px);
+    z-index: 1001;
+    overflow: hidden;
+    display: none;
+}
+
+.panel-header {
+    background: rgba(52, 152, 219, 0.1);
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(52, 152, 219, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 1.1em;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.panel-content {
+    padding: 16px;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 2px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.legend-color.circle {
+    border-radius: 50%;
+}
+
+.legend-group {
+    margin: 16px 0;
+    padding: 12px;
+    background: rgba(52, 152, 219, 0.05);
+    border-radius: 8px;
+    border-left: 3px solid #3498db;
+}
+
+.legend-group h4 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.legend-group .legend-item {
+    margin-bottom: 6px;
+}
+
+/* Scrollbar para painéis */
+.panel-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.panel-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.panel-content::-webkit-scrollbar-thumb {
+    background: rgba(52, 152, 219, 0.3);
+    border-radius: 3px;
+}
+
+.panel-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(52, 152, 219, 0.5);
+}
+
+/* ========================================
    HEADER
 ======================================== */
 #header {
@@ -158,9 +320,10 @@ body {
 #sidebar {
     position: fixed;
     left: 20px;
-    top: 80px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 320px;
-    height: calc(100vh - 120px);
+    height: calc(100vh - 300px);
     background: rgba(255, 255, 255, 0.95);
     color: #2c3e50;
     overflow: hidden;
@@ -175,12 +338,12 @@ body {
 }
 
 #sidebar:hover {
-    transform: translateY(-2px);
+    transform: translateY(-50%) translateY(-2px);
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 #sidebar.hidden {
-    transform: translateX(-100%) translateY(-2px);
+    transform: translateX(-100%) translateY(-50%);
     opacity: 0;
 }
 
@@ -219,8 +382,6 @@ body {
 .sidebar-content::-webkit-scrollbar-thumb:hover {
     background: rgba(52, 152, 219, 0.5);
 }
-
-/* Handle de Redimensionamento - Removido para simplicidade */
 
 /* ========================================
    MAPA
