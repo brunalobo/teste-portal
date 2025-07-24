@@ -287,7 +287,6 @@ body {
 
 /* Container dos Subgrupos */
 .layer-groups {
-    background: rgba(0, 0, 0, 0.02);
     transition: all 0.3s ease;
     max-height: 1000px;
     overflow: hidden;
@@ -339,7 +338,7 @@ body {
     transform: rotate(-90deg);
 }
 
-/* Lista de Shapefiles (Nível 3) */
+/* Lista de Dados (Nível 3) */
 .shapefile-list {
     background: rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
