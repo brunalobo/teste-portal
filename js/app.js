@@ -1,576 +1,530 @@
 let map;
 let layersData = {};
-let sidebarVisible = true;
 
+// Configuração das camadas ArcGIS
+const layerConfigs = {
+    'batimetria': {
+        url: 'https://services8.arcgis.com/5ekuCm03ET77DU3P/arcgis/rest/services/Batimetria_Linha_CPRM_nov2013/FeatureServer',
+        name: 'Batimetria'
+    },
+    'foz-rios': {
+        url: 'https://services8.arcgis.com/5ekuCm03ET77DU3P/arcgis/rest/services/IBP_MAREM_FozdeRio/FeatureServer',
+        name: 'Foz de Rios'
+    },
+    'municipios': {
+        url: 'https://services8.arcgis.com/5ekuCm03ET77DU3P/arcgis/rest/services/Municipios_Costeiros_IBGE_jul2020/FeatureServer',
+        name: 'Municípios Costeiros'
+    },
+    'sensibilidade-litoral': {
+        url: 'https://services8.arcgis.com/5ekuCm03ET77DU3P/arcgis/rest/services/IBP_MAREM_Indice_de_Sensibilidade_do_Litoral/FeatureServer',
+        name: 'Índice de Sensibilidade do Litoral'
+    },
+    'bacias-sedimentares': {
+        url: 'https://services8.arcgis.com/5ekuCm03ET77DU3P/arcgis/rest/services/Bacias_Sedimentares_ANP_dez2020/FeatureServer',
+        name: 'Bacias Sedimentares'
+    },
+    'terras-indigenas': {
+        url: 'https://services8.arcgis.com/5ekuCm03ET77DU3P/arcgis/rest/services/IBP_MAREM_TerrasIndigenas_pl_FUNAI2021/FeatureServer',
+        name: 'Terras Indígenas'
+    },
+    'areas-quilombolas': {
+        url: 'https://services8.arcgis.com/5ekuCm03ET77DU3P/arcgis/rest/services/IBP_MAREM_AreasQuilombolas_INCRA2023_shp/FeatureServer',
+        name: 'Áreas Quilombolas'
+    },
+    'unidades-conservacao': {
+        url: 'https://services8.arcgis.com/5ekuCm03ET77DU3P/arcgis/rest/services/Unidades_de_Conservacao_MMAICMBIO_jun2020/FeatureServer',
+        name: 'Unidades de Conservação'
+    }
+};
+
+// Inicialização quando a página carregar
 document.addEventListener('DOMContentLoaded', function() {
     initializeMap();
-    initializeMenuState();
-    initializeHeader();
+    initializeToggleSwitches();
 });
 
-function initializeHeader() {
-    const searchInput = document.getElementById('search-input');
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            searchLayers(e.target.value);
-        });
-    }
-}
-
-function initializeMap() {
-    map = new maplibregl.Map({
-        container: 'map',
-        style: {
-            version: 8,
-            sources: {
-                'esri-dark': {
-                    type: 'raster',
-                    tiles: [
-                        'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
-                    ],
-                    tileSize: 256,
-                    attribution: 'Tiles © Esri — Esri, DeLorme, NAVTEQ'
-                }
-            },
-            layers: [
-                {
-                    id: 'esri-dark-layer',
-                    type: 'raster',
-                    source: 'esri-dark'
-                }
-            ]
-        },
-        center: [-43.2, -22.9], // exemplo: centro do Rio de Janeiro
-        zoom: 10
-    });
-
-    map.addControl(new maplibregl.NavigationControl());
-    map.addControl(new maplibregl.ScaleControl(), 'bottom-right');
-    
-    // Adicionar controles customizados
-    addCustomControls();
-
-    map.on('load', function() {
-        map.on('click', function(e) {
-            const features = map.queryRenderedFeatures(e.point);
+// Função para inicializar os toggles switches
+function initializeToggleSwitches() {
+    // Adicionar evento de click nos toggle switches
+    document.querySelectorAll('.toggle-switch').forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            // Não permitir clique se estiver em loading
+            if (this.classList.contains('loading')) {
+                e.preventDefault();
+                return;
+            }
             
-            if (features.length > 0) {
-                const feature = features[0];
-                
-                new maplibregl.Popup()
-                    .setLngLat(e.lngLat)
-                    .setHTML(`
-                        <div style="font-family: Poppins, sans-serif;">
-                            <h4 style="margin: 0 0 10px 0; color: #2c3e50;">
-                                ${feature.properties.name || 'Camada'}
-                            </h4>
-                            <p style="margin: 0; font-size: 12px; color: #7f8c8d;">
-                                ${feature.properties.description || 'Clique para mais informações'}
-                            </p>
-                        </div>
-                    `)
-                    .addTo(map);
+            const checkbox = this.previousElementSibling;
+            if (checkbox && checkbox.type === 'checkbox') {
+                checkbox.checked = !checkbox.checked;
+                // Disparar o evento onchange manualmente
+                const event = new Event('change');
+                checkbox.dispatchEvent(event);
             }
         });
-        
-        map.on('mouseenter', function() {
-            map.getCanvas().style.cursor = 'pointer';
-        });
-        
-        map.on('mouseleave', function() {
-            map.getCanvas().style.cursor = '';
+    });
+    
+    // Adicionar evento de click nos labels
+    document.querySelectorAll('.layer-item label').forEach(label => {
+        label.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const checkbox = document.getElementById(this.getAttribute('for'));
+            const toggleSwitch = checkbox?.nextElementSibling;
+            
+            // Não permitir clique se estiver em loading
+            if (toggleSwitch?.classList.contains('loading')) {
+                return;
+            }
+            
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+                // Disparar o evento onchange manualmente
+                const event = new Event('change');
+                checkbox.dispatchEvent(event);
+            }
         });
     });
 }
 
-// Função para adicionar controles customizados
-function addCustomControls() {
-    // Controle de Legenda
-    const legendControl = new LegendControl();
-    map.addControl(legendControl, 'top-right');
-    
-    // Controle de Camadas
-    const layersControl = new LayersControl();
-    map.addControl(layersControl, 'top-right');
-    
-    // Controle de Localização
-    const locationControl = new LocationControl();
-    map.addControl(locationControl, 'top-right');
-}
-
-// Classe para controle de Legenda
-class LegendControl {
-    onAdd(map) {
-        this.map = map;
-        this.container = document.createElement('div');
-        this.container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
-        this.container.innerHTML = `
-            <button class="map-control-btn" title="Legenda" onclick="toggleLegend()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/>
-                </svg>
-            </button>
-        `;
-        return this.container;
-    }
-    
-    onRemove() {
-        this.container.parentNode.removeChild(this.container);
-        this.map = undefined;
-    }
-}
-
-// Classe para controle de Camadas
-class LayersControl {
-    onAdd(map) {
-        this.map = map;
-        this.container = document.createElement('div');
-        this.container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
-        this.container.innerHTML = `
-            <button class="map-control-btn" title="Camadas" onclick="toggleLayersPanel()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M11.99 18.54l-7.37-5.73L3 14.07l9 7 9-7-1.63-1.27-7.38 5.74zM12 16l7.36-5.73L21 9l-9-7-9 7 1.63 1.27L12 16z"/>
-                </svg>
-            </button>
-        `;
-        return this.container;
-    }
-    
-    onRemove() {
-        this.container.parentNode.removeChild(this.container);
-        this.map = undefined;
-    }
-}
-
-// Classe para controle de Localização
-class LocationControl {
-    onAdd(map) {
-        this.map = map;
-        this.container = document.createElement('div');
-        this.container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
-        this.container.innerHTML = `
-            <button class="map-control-btn" title="Minha Localização" onclick="goToMyLocation()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3A8.994 8.994 0 0 0 13 3.06V1h-2v2.06A8.994 8.994 0 0 0 3.06 11H1v2h2.06A8.994 8.994 0 0 0 11 20.94V23h2v-2.06A8.994 8.994 0 0 0 20.94 13H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
-                </svg>
-            </button>
-        `;
-        return this.container;
-    }
-    
-    onRemove() {
-        this.container.parentNode.removeChild(this.container);
-        this.map = undefined;
-    }
-}
-
-// Função para alternar a legenda
-function toggleLegend() {
-    let legendPanel = document.getElementById('legend-panel');
-    
-    if (!legendPanel) {
-        createLegendPanel();
-        legendPanel = document.getElementById('legend-panel');
-    }
-    
-    if (legendPanel.style.display === 'none' || !legendPanel.style.display) {
-        legendPanel.style.display = 'block';
-    } else {
-        legendPanel.style.display = 'none';
-    }
-}
-
-// Função para criar o painel de legenda
-function createLegendPanel() {
-    const legendPanel = document.createElement('div');
-    legendPanel.id = 'legend-panel';
-    legendPanel.className = 'map-panel legend-panel';
-    legendPanel.innerHTML = `
-        <div class="panel-header">
-            <h3>Legenda</h3>
-            <button onclick="closeLegend()" class="close-btn">×</button>
-        </div>
-        <div class="panel-content">
-            <div class="legend-item">
-                <div class="legend-color" style="background: #3498db;"></div>
-                <span>Municípios</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color" style="background: #2c3e50;"></div>
-                <span>Batimetria</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-color circle" style="background: #3498db;"></div>
-                <span>Foz dos Rios</span>
-            </div>
-            <div class="legend-group">
-                <h4>Sensibilidade do Litoral</h4>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #2ecc71;"></div>
-                    <span>Baixa (1)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #f1c40f;"></div>
-                    <span>Média (2)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #e67e22;"></div>
-                    <span>Alta (3)</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #e74c3c;"></div>
-                    <span>Muito Alta (4)</span>
-                </div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(legendPanel);
-}
-
-// Função para fechar a legenda
-function closeLegend() {
-    const legendPanel = document.getElementById('legend-panel');
-    if (legendPanel) {
-        legendPanel.style.display = 'none';
-    }
-}
-
-// Função para alternar o painel de camadas
-function toggleLayersPanel() {
-    const sidebar = document.getElementById('sidebar');
-    
-    if (sidebar.classList.contains('hidden')) {
-        sidebar.classList.remove('hidden');
-    } else {
-        sidebar.classList.add('hidden');
-    }
-    
-    setTimeout(() => {
-        if (map) {
-            map.resize();
-        }
-    }, 300);
-}
-
-// Função para ir para minha localização
-function goToMyLocation() {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                const coords = [position.coords.longitude, position.coords.latitude];
-                
-                // Adicionar marcador de localização
-                if (map.getSource('user-location')) {
-                    map.getSource('user-location').setData({
-                        type: 'Point',
-                        coordinates: coords
-                    });
-                } else {
-                    map.addSource('user-location', {
-                        type: 'geojson',
-                        data: {
-                            type: 'Point',
-                            coordinates: coords
-                        }
-                    });
-                    
-                    map.addLayer({
-                        id: 'user-location',
-                        type: 'circle',
-                        source: 'user-location',
-                        paint: {
-                            'circle-radius': 8,
-                            'circle-color': '#007cbf',
-                            'circle-stroke-color': '#fff',
-                            'circle-stroke-width': 2
-                        }
-                    });
-                }
-                
-                // Centralizar o mapa na localização do usuário
-                map.flyTo({
-                    center: coords,
-                    zoom: 15,
-                    duration: 2000
-                });
-                
-                // Mostrar popup com informação
-                new maplibregl.Popup()
-                    .setLngLat(coords)
-                    .setHTML('<div style="font-family: Poppins, sans-serif;"><strong>Você está aqui!</strong></div>')
-                    .addTo(map);
+// Função para inicializar o mapa
+function initializeMap() {
+    try {
+        map = new maplibregl.Map({
+            container: 'map',
+            style: {
+                version: 8,
+                sources: {
+                    'esri-dark': {
+                        type: 'raster',
+                        tiles: [
+                            'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+                        ],
+                        tileSize: 256,
+                        attribution: 'Tiles © Esri — Esri, DeLorme, NAVTEQ'
+                    }
+                },
+                layers: [
+                    {
+                        id: 'esri-dark-layer',
+                        type: 'raster',
+                        source: 'esri-dark'
+                    }
+                ]
             },
-            function(error) {
-                alert('Erro ao obter localização: ' + error.message);
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 5000,
-                maximumAge: 0
-            }
-        );
-    } else {
-        alert('Geolocalização não é suportada pelo seu navegador.');
+            center: [-43.2, -22.9],
+            zoom: 8,
+            minZoom: 3,
+            maxZoom: 18
+        });
+
+        // Aguardar o mapa carregar antes de adicionar controles
+        map.on('load', function() {
+            addAllControls();
+            console.log('Mapa carregado com sucesso!');
+        });
+
+        // Error handling
+        map.on('error', function(e) {
+            console.error('Erro no mapa:', e);
+        });
+
+    } catch (error) {
+        console.error('Erro ao inicializar mapa:', error);
     }
 }
 
-function initializeMenuState() {
-    const defaultExpanded = ['dados-ambientais'];
-    defaultExpanded.forEach(classId => {
-        const element = document.getElementById(classId);
-        if (element) {
-            element.classList.remove('collapsed');
-        }
-    });
+// Função para adicionar todos os controles do MapLibre
+function addAllControls() {
+    // Controles de navegação (zoom in/out, compass)
+    map.addControl(new maplibregl.NavigationControl({
+        showCompass: true,
+        showZoom: true,
+        visualizePitch: true
+    }), 'top-right');
 
-    const defaultSubgroupsExpanded = ['ambiental'];
-    defaultSubgroupsExpanded.forEach(subgroupId => {
-        const element = document.getElementById(subgroupId);
-        if (element) {
-            element.classList.remove('collapsed');
-        }
-    });
-}
+    // Controle de escala
+    map.addControl(new maplibregl.ScaleControl({
+        maxWidth: 100,
+        unit: 'metric'
+    }), 'bottom-right');
 
-function toggleClass(classId) {
-    const element = document.getElementById(classId);
-    const button = element.previousElementSibling;
-    
-    if (element.classList.contains('collapsed')) {
-        element.classList.remove('collapsed');
-        button.classList.remove('collapsed');
-        element.parentElement.classList.add('active');
-    } else {
-        element.classList.add('collapsed');
-        button.classList.add('collapsed');
-        element.parentElement.classList.remove('active');
-    }
-}
+    // Controle de tela cheia
+    map.addControl(new maplibregl.FullscreenControl({
+        container: document.querySelector('body')
+    }), 'top-right');
 
-function toggleSubgroup(subgroupId) {
-    const element = document.getElementById(subgroupId);
-    const button = element.previousElementSibling;
-    
-    if (element.classList.contains('collapsed')) {
-        element.classList.remove('collapsed');
-        button.classList.remove('collapsed');
-        element.parentElement.classList.add('active');
-    } else {
-        element.classList.add('collapsed');
-        button.classList.add('collapsed');
-        element.parentElement.classList.remove('active');
-    }
-}
-
-function toggleLayer(layerId) {
-    const checkbox = document.getElementById(layerId + '-layer');
-    const isVisible = checkbox.checked;
-    const layerItem = checkbox.closest('.shapefile-item');
-    
-    if (isVisible) {
-        addLayerToMap(layerId);
-        layerItem.classList.add('layer-active');
-    } else {
-        removeLayerFromMap(layerId);
-        layerItem.classList.remove('layer-active');
-    }
-}
-
-function addLayerToMap(layerId) {
-    if (map.getLayer(layerId)) {
-        map.setLayoutProperty(layerId, 'visibility', 'visible');
-        return;
-    }
-
-    const layerConfigs = {
-        'municipios': {
-            type: 'fill',
-            paint: {
-                'fill-color': '#3498db',
-                'fill-opacity': 0.3,
-                'fill-outline-color': '#2980b9'
-            }
+    // Controle de geolocalização
+    map.addControl(new maplibregl.GeolocateControl({
+        positionOptions: {
+            enableHighAccuracy: true
         },
+        fitBoundsOptions: {
+            maxZoom: 15
+        },
+        trackUserLocation: true,
+        showAccuracyCircle: true
+    }), 'top-right');
+
+    // Controle de pitch/rotação
+    class TerrainControl {
+        onAdd(map) {
+            this._map = map;
+            this._container = document.createElement('div');
+            this._container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+            this._container.innerHTML = `
+                <button type="button" onclick="resetView()" title="Reset da Visualização">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                        <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M18,11H13L14.5,9.5C13.14,8.86 11.54,8.84 10.15,9.45C8.76,10.06 7.78,11.24 7.5,12.66C7.18,14.42 7.84,16.26 9.25,17.43L10.32,16.36C9.52,15.73 9.05,14.76 9.22,13.73C9.37,12.83 9.92,12.06 10.71,11.68C11.5,11.29 12.40,11.33 13.15,11.78L11.5,13.5H18V11Z"/>
+                    </svg>
+                </button>
+            `;
+            return this._container;
+        }
+        
+        onRemove() {
+            this._container.parentNode.removeChild(this._container);
+            this._map = undefined;
+        }
+    }
+    
+    map.addControl(new TerrainControl(), 'top-right');
+}
+
+// Função para resetar a visualização do mapa
+function resetView() {
+    map.easeTo({
+        center: [-43.2, -22.9],
+        zoom: 8,
+        pitch: 0,
+        bearing: 0,
+        duration: 1000
+    });
+}
+
+// Função para carregar dados do ArcGIS FeatureServer
+async function loadArcGISFeatures(layerId) {
+    const config = layerConfigs[layerId];
+    if (!config) {
+        console.error(`Configuração não encontrada para camada: ${layerId}`);
+        return null;
+    }
+
+    try {
+        console.log(`Carregando camada: ${config.name}`);
+        
+        // Buscar dados do FeatureServer
+        const response = await fetch(`${config.url}/0/query?f=geojson&where=1=1&outFields=*&resultRecordCount=1000`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.features && data.features.length > 0) {
+            console.log(`Camada ${config.name} carregada com ${data.features.length} features`);
+            return data;
+        } else {
+            console.warn(`Nenhuma feature encontrada para ${config.name}`);
+            return null;
+        }
+        
+    } catch (error) {
+        console.error(`Erro ao carregar camada ${config.name}:`, error);
+        return null;
+    }
+}
+
+// Função para obter estilo da camada baseado no tipo de geometria
+function getLayerStyle(layerId, geometryType) {
+    const baseStyles = {
         'batimetria': {
-            type: 'fill',
+            type: 'line',
             paint: {
-                'fill-color': '#2c3e50',
-                'fill-opacity': 0.5
+                'line-color': '#0066cc',
+                'line-width': 2,
+                'line-opacity': 0.8
             }
         },
         'foz-rios': {
             type: 'circle',
             paint: {
-                'circle-color': '#3498db',
-                'circle-radius': 4,
-                'circle-stroke-color': '#2980b9',
-                'circle-stroke-width': 1
+                'circle-color': '#00aaff',
+                'circle-radius': 6,
+                'circle-stroke-color': '#ffffff',
+                'circle-stroke-width': 2,
+                'circle-opacity': 0.8
+            }
+        },
+        'municipios': {
+            type: 'fill',
+            paint: {
+                'fill-color': '#ffaa00',
+                'fill-opacity': 0.4,
+                'fill-outline-color': '#ff8800'
             }
         },
         'sensibilidade-litoral': {
             type: 'fill',
             paint: {
-                'fill-color': [
-                    'case',
-                    ['==', ['get', 'sensitivity'], 1], '#2ecc71',
-                    ['==', ['get', 'sensitivity'], 2], '#f1c40f',
-                    ['==', ['get', 'sensitivity'], 3], '#e67e22',
-                    ['==', ['get', 'sensitivity'], 4], '#e74c3c',
-                    '#95a5a6'
-                ],
-                'fill-opacity': 0.6
+                'fill-color': '#ff6600',
+                'fill-opacity': 0.5,
+                'fill-outline-color': '#cc3300'
+            }
+        },
+        'bacias-sedimentares': {
+            type: 'fill',
+            paint: {
+                'fill-color': '#8a2be2',
+                'fill-opacity': 0.4,
+                'fill-outline-color': '#6a1b9a'
+            }
+        },
+        'terras-indigenas': {
+            type: 'fill',
+            paint: {
+                'fill-color': '#2e7d32',
+                'fill-opacity': 0.5,
+                'fill-outline-color': '#1b5e20'
+            }
+        },
+        'areas-quilombolas': {
+            type: 'fill',
+            paint: {
+                'fill-color': '#d32f2f',
+                'fill-opacity': 0.5,
+                'fill-outline-color': '#b71c1c'
+            }
+        },
+        'unidades-conservacao': {
+            type: 'fill',
+            paint: {
+                'fill-color': '#388e3c',
+                'fill-opacity': 0.4,
+                'fill-outline-color': '#2e7d32'
             }
         }
     };
 
-    if (!map.getSource(layerId)) {
-        map.addSource(layerId, {
-            type: 'geojson',
-            data: generateSampleData(layerId)
-        });
-    }
-
-    const config = layerConfigs[layerId] || {
-        type: 'fill',
-        paint: {
-            'fill-color': '#3498db',
-            'fill-opacity': 0.3
-        }
-    };
-
-    map.addLayer({
-        id: layerId,
-        type: config.type,
-        source: layerId,
-        paint: config.paint,
-        layout: {
-            'visibility': 'visible'
-        }
-    });
-
-    layersData[layerId] = {
-        visible: true,
-        config: config
-    };
-}
-
-function removeLayerFromMap(layerId) {
-    if (map.getLayer(layerId)) {
-        map.setLayoutProperty(layerId, 'visibility', 'none');
-        layersData[layerId].visible = false;
-    }
-}
-
-function generateSampleData(layerId) {
-    const sampleFeatures = {
-        type: 'FeatureCollection',
-        features: []
-    };
-
-    if (layerId === 'foz-rios') {
-        for (let i = 0; i < 5; i++) {
-            sampleFeatures.features.push({
-                type: 'Feature',
-                geometry: {
-                    type: 'Point',
-                    coordinates: [-45 + Math.random() * 10, -15 + Math.random() * 10]
-                },
-                properties: {
-                    name: `Foz do Rio ${i + 1}`,
-                    description: `Foz de rio exemplo ${i + 1}`
+    // Retorna estilo base ou adapta baseado no tipo de geometria
+    const style = baseStyles[layerId];
+    if (!style) {
+        // Estilo padrão baseado na geometria
+        if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
+            return {
+                type: 'fill',
+                paint: {
+                    'fill-color': '#ff0000',
+                    'fill-opacity': 0.5,
+                    'fill-outline-color': '#aa0000'
                 }
-            });
+            };
+        } else if (geometryType === 'LineString' || geometryType === 'MultiLineString') {
+            return {
+                type: 'line',
+                paint: {
+                    'line-color': '#ff0000',
+                    'line-width': 2
+                }
+            };
+        } else {
+            return {
+                type: 'circle',
+                paint: {
+                    'circle-color': '#ff0000',
+                    'circle-radius': 5
+                }
+            };
         }
-    } else {
-        sampleFeatures.features.push({
-            type: 'Feature',
-            geometry: {
-                type: 'Polygon',
-                coordinates: [[
-                    [-45, -15],
-                    [-44, -15],
-                    [-44, -14],
-                    [-45, -14],
-                    [-45, -15]
-                ]]
-            },
-            properties: {
-                name: layerId,
-                description: `Dados de ${layerId}`,
-                sensitivity: Math.floor(Math.random() * 4) + 1
-            }
-        });
     }
-
-    return sampleFeatures;
+    
+    return style;
 }
 
-function searchLayers(searchTerm) {
-    const items = document.querySelectorAll('.shapefile-item');
-    const term = searchTerm.toLowerCase().trim();
+// Função para alternar visibilidade da camada
+async function toggleLayer(layerId) {
+    const checkbox = document.getElementById(`${layerId}-layer`);
+    const toggleSwitch = checkbox?.nextElementSibling;
     
-    if (term === '') {
-        items.forEach(item => {
-            item.style.display = 'flex';
-        });
+    if (!checkbox || !toggleSwitch) {
+        console.error(`Elementos não encontrados para camada: ${layerId}`);
         return;
     }
     
-    items.forEach(item => {
-        const label = item.querySelector('label').textContent.toLowerCase();
-        if (label.includes(term)) {
-            item.style.display = 'flex';
+    const isChecked = checkbox.checked;
+
+    try {
+        if (isChecked) {
+            // Primeiro, volta o toggle para off enquanto carrega
+            checkbox.checked = false;
             
-            let parent = item.closest('.layer-groups');
-            while (parent) {
-                parent.classList.remove('collapsed');
-                const button = parent.previousElementSibling;
-                if (button) button.classList.remove('collapsed');
-                parent = parent.parentElement.closest('.layer-groups');
-            }
+            // Adicionar estado de loading
+            toggleSwitch.classList.add('loading');
             
-            let subgroup = item.closest('.shapefile-list');
-            if (subgroup) {
-                subgroup.classList.remove('collapsed');
-                const subButton = subgroup.previousElementSibling;
-                if (subButton) subButton.classList.remove('collapsed');
+            // Carregar dados se necessário
+            if (!layersData[layerId]) {
+                console.log(`Iniciando carregamento da camada: ${layerConfigs[layerId]?.name}`);
+                
+                const data = await loadArcGISFeatures(layerId);
+                if (data && data.features && data.features.length > 0) {
+                    layersData[layerId] = data;
+                } else {
+                    // Remover loading e manter off
+                    toggleSwitch.classList.remove('loading');
+                    alert(`Não foi possível carregar dados para: ${layerConfigs[layerId]?.name || layerId}`);
+                    return;
+                }
             }
+
+            // Adicionar source se não existir
+            if (!map.getSource(layerId)) {
+                map.addSource(layerId, {
+                    type: 'geojson',
+                    data: layersData[layerId]
+                });
+            }
+
+            // Determinar tipo de geometria
+            const firstFeature = layersData[layerId].features[0];
+            const geometryType = firstFeature ? firstFeature.geometry.type : 'Point';
+
+            // Adicionar layer se não existir
+            if (!map.getLayer(layerId)) {
+                const style = getLayerStyle(layerId, geometryType);
+                
+                map.addLayer({
+                    id: layerId,
+                    source: layerId,
+                    ...style
+                });
+
+                // Adicionar popup ao clicar
+                map.on('click', layerId, function(e) {
+                    showFeaturePopup(e, layerId);
+                });
+
+                // Cursor pointer no hover
+                map.on('mouseenter', layerId, function() {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+
+                map.on('mouseleave', layerId, function() {
+                    map.getCanvas().style.cursor = '';
+                });
+            }
+
+            // Tornar visível
+            map.setLayoutProperty(layerId, 'visibility', 'visible');
+            
+            // Remover loading e ativar toggle
+            toggleSwitch.classList.remove('loading');
+            checkbox.checked = true;
+            
+            console.log(`Camada ${layerId} ativada com sucesso`);
+
         } else {
-            item.style.display = 'none';
+            // Ocultar camada (isso é imediato)
+            if (map.getLayer(layerId)) {
+                map.setLayoutProperty(layerId, 'visibility', 'none');
+                console.log(`Camada ${layerId} desativada`);
+            }
+        }
+    } catch (error) {
+        console.error(`Erro ao alternar camada ${layerId}:`, error);
+        
+        // Remover loading e manter off em caso de erro
+        toggleSwitch.classList.remove('loading');
+        checkbox.checked = false;
+        
+        alert(`Erro ao carregar camada: ${error.message}`);
+    }
+}
+
+// Função para mostrar popup com informações da feature
+function showFeaturePopup(e, layerId) {
+    const feature = e.features[0];
+    const config = layerConfigs[layerId];
+    
+    if (!feature || !config) return;
+
+    // Construir HTML do popup
+    let popupContent = `<h3>${config.name}</h3>`;
+    
+    if (feature.properties) {
+        popupContent += '<div class="popup-properties">';
+        
+        // Mostrar algumas propriedades principais
+        const importantProps = ['nome', 'name', 'NOME', 'NAME', 'descricao', 'tipo', 'area'];
+        let hasProps = false;
+        
+        for (const prop of importantProps) {
+            if (feature.properties[prop]) {
+                popupContent += `<p><strong>${prop}:</strong> ${feature.properties[prop]}</p>`;
+                hasProps = true;
+            }
+        }
+        
+        // Se não encontrou propriedades importantes, mostrar as primeiras 3
+        if (!hasProps) {
+            const props = Object.keys(feature.properties).slice(0, 3);
+            for (const prop of props) {
+                if (feature.properties[prop] !== null && feature.properties[prop] !== '') {
+                    popupContent += `<p><strong>${prop}:</strong> ${feature.properties[prop]}</p>`;
+                }
+            }
+        }
+        
+        popupContent += '</div>';
+    }
+
+    // Criar e mostrar popup
+    new maplibregl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(popupContent)
+        .addTo(map);
+}
+
+// Função para alternar submenu
+function toggleSubmenu(submenuId) {
+    const submenu = document.getElementById(submenuId);
+    if (submenu) {
+        submenu.classList.toggle('active');
+    }
+}
+
+// Função para zoom em todas as camadas ativas
+function fitToActiveLayers() {
+    const activeLayers = Object.keys(layersData).filter(layerId => {
+        const checkbox = document.getElementById(`${layerId}-layer`);
+        return checkbox && checkbox.checked;
+    });
+
+    if (activeLayers.length === 0) {
+        alert('Nenhuma camada ativa para ajustar o zoom');
+        return;
+    }
+
+    // Calcular bounds de todas as camadas ativas
+    let bounds = new maplibregl.LngLatBounds();
+    
+    activeLayers.forEach(layerId => {
+        const data = layersData[layerId];
+        if (data && data.features) {
+            data.features.forEach(feature => {
+                if (feature.geometry.type === 'Point') {
+                    bounds.extend(feature.geometry.coordinates);
+                } else if (feature.geometry.type === 'Polygon') {
+                    feature.geometry.coordinates[0].forEach(coord => bounds.extend(coord));
+                } else if (feature.geometry.type === 'LineString') {
+                    feature.geometry.coordinates.forEach(coord => bounds.extend(coord));
+                }
+            });
         }
     });
-}
 
-function clearSearch() {
-    const searchInput = document.getElementById('search-input');
-    searchInput.value = '';
-    searchLayers('');
-}
-
-function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-            console.log(`Erro ao entrar em tela cheia: ${err.message}`);
-        });
-    } else {
-        document.exitFullscreen();
+    // Aplicar zoom
+    if (!bounds.isEmpty()) {
+        map.fitBounds(bounds, { padding: 50, duration: 1000 });
     }
-}
-
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    
-    sidebarVisible = !sidebarVisible;
-    
-    if (sidebarVisible) {
-        sidebar.classList.remove('hidden');
-    } else {
-        sidebar.classList.add('hidden');
-    }
-    
-    setTimeout(() => {
-        if (map) {
-            map.resize();
-        }
-    }, 300);
 }

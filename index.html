@@ -12,92 +12,76 @@
     </head>
 
     <body>
-        <header id="header">
-            <div class="header-container">
-                <div class="logo-section">
-                    <div class="logo">
-                        <img src="assets/img/logo_geoportal.png" alt="OceanPact Logo" class="logo-icon">
-                    </div>
-                </div>
-
-                <div class="header-controls">
-                    <div class="search-container">
-                        <input type="text" id="search-input" placeholder="Buscar camadas..." onkeyup="searchLayers(this.value)">
-                        <button class="search-btn" onclick="clearSearch()">x</button>
-                    </div>
-
-                    <div class="action-buttons">
-                        <button class="action-btn" onclick="toggleFullscreen()" title="Tela cheia">⛶</button>
-                    </div>
-                </div>
-            </div>
-        </header>
-
+        <!-- Sidebar -->
         <div id="sidebar">
+            <!-- Header da Sidebar com Logo -->
+            <div class="sidebar-header">
+                <a href="#" class="logo">
+                    <img src="assets/img/logo_geoportal.png" alt="OceanPact Logo" class="logo-icon">
+                </a>
+            </div>
+
+            <!-- Navegação -->
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item" onclick="toggleSubmenu('data-submenu')">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L2 7v10c0 5.55 3.84 9.75 9 11 5.16-1.25 9-5.45 9-11V7l-10-5z"/>
+                    </svg>
+                    Data
+                </a>
+                <div id="data-submenu" class="nav-submenu">
+                    <div class="layer-item">
+                        <input type="checkbox" id="batimetria-layer" onchange="toggleLayer('batimetria')">
+                        <div class="toggle-switch"></div>
+                        <label for="batimetria-layer">Batimetria</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" id="foz-rios-layer" onchange="toggleLayer('foz-rios')">
+                        <div class="toggle-switch"></div>
+                        <label for="foz-rios-layer">Foz de Rios</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" id="municipios-layer" onchange="toggleLayer('municipios')">
+                        <div class="toggle-switch"></div>
+                        <label for="municipios-layer">Municípios Costeiros</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" id="sensibilidade-litoral-layer" onchange="toggleLayer('sensibilidade-litoral')">
+                        <div class="toggle-switch"></div>
+                        <label for="sensibilidade-litoral-layer">Índice de Sensibilidade do Litoral</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" id="bacias-sedimentares-layer" onchange="toggleLayer('bacias-sedimentares')">
+                        <div class="toggle-switch"></div>
+                        <label for="bacias-sedimentares-layer">Bacias Sedimentares</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" id="terras-indigenas-layer" onchange="toggleLayer('terras-indigenas')">
+                        <div class="toggle-switch"></div>
+                        <label for="terras-indigenas-layer">Terras Indígenas</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" id="areas-quilombolas-layer" onchange="toggleLayer('areas-quilombolas')">
+                        <div class="toggle-switch"></div>
+                        <label for="areas-quilombolas-layer">Áreas Quilombolas</label>
+                    </div>
+                    <div class="layer-item">
+                        <input type="checkbox" id="unidades-conservacao-layer" onchange="toggleLayer('unidades-conservacao')">
+                        <div class="toggle-switch"></div>
+                        <label for="unidades-conservacao-layer">Unidades de Conservação</label>
+                    </div>
+                </div>
+                
+                <a href="#" class="nav-item">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                    Widgets
+                </a>
+            </nav>
+
+            <!-- Conteúdo das Camadas removido - agora está no submenu -->
             <div class="sidebar-content">
-                <h2>Dados</h2>
-
-                <div class="layer-class">
-                    <button class="class-toggle" onclick="toggleClass('limites-territoriais')">
-                        <span class="toggle-icon">▼</span> Limites Territoriais
-                    </button>
-                    <div id="limites-territoriais" class="layer-groups">
-                        <div class="layer-subgroup">
-                            <button class="subgroup-toggle" onclick="toggleSubgroup('divisoes-admin')">
-                                <span class="toggle-icon">▼</span> Divisões Administrativas
-                            </button>
-                            <div id="divisoes-admin" class="shapefile-list">
-                                <div class="shapefile-item">
-                                    <input type="checkbox" id="municipios-layer" onchange="toggleLayer('municipios')">
-                                    <label for="municipios-layer">Municípios Costeiros</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="layer-class">
-                    <button class="class-toggle" onclick="toggleClass('dados-ambientais')">
-                        <span class="toggle-icon">▼</span> Dados Ambientais
-                    </button>
-                    <div id="dados-ambientais" class="layer-groups">
-                        <div class="layer-subgroup">
-                            <button class="subgroup-toggle" onclick="toggleSubgroup('batimetria-group')">
-                                <span class="toggle-icon">▼</span> Batimetria
-                            </button>
-                            <div id="batimetria-group" class="shapefile-list">
-                                <div class="shapefile-item">
-                                    <input type="checkbox" id="batimetria-layer" onchange="toggleLayer('batimetria')">
-                                    <label for="batimetria-layer">Batimetria</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="layer-subgroup">
-                            <button class="subgroup-toggle" onclick="toggleSubgroup('hidrografia')">
-                                <span class="toggle-icon">▼</span> Hidrografia
-                            </button>
-                            <div id="hidrografia" class="shapefile-list">
-                                <div class="shapefile-item">
-                                    <input type="checkbox" id="foz-rios-layer" onchange="toggleLayer('foz-rios')">
-                                    <label for="foz-rios-layer">Foz de Rios</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="layer-subgroup">
-                            <button class="subgroup-toggle" onclick="toggleSubgroup('ambiental')">
-                                <span class="toggle-icon">▼</span> Meio Ambiente
-                            </button>
-                            <div id="ambiental" class="shapefile-list">
-                                <div class="shapefile-item">
-                                    <input type="checkbox" id="sensibilidade-litoral-layer" onchange="toggleLayer('sensibilidade-litoral')" checked>
-                                    <label for="sensibilidade-litoral-layer">Índice de Sensibilidade do Litoral</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
