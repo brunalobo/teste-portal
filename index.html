@@ -14,6 +14,13 @@
     <body>
         <!-- Sidebar -->
         <div id="sidebar">
+            <!-- Botão de fechar sidebar -->
+            <button class="sidebar-close-btn" onclick="toggleSidebar()" title="Recolher">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/>
+                </svg>
+            </button>
+            
             <!-- Header da Sidebar com Logo -->
             <div class="sidebar-header">
                 <a href="#" class="logo">
@@ -23,69 +30,221 @@
 
             <!-- Navegação -->
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item" onclick="toggleSubmenu('data-submenu')">
+                <a href="#" class="nav-item">
                     <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2L2 7v10c0 5.55 3.84 9.75 9 11 5.16-1.25 9-5.45 9-11V7l-10-5z"/>
+                        <path d="M12 3C16.97 3 21 4.13 21 5.5V18.5C21 19.88 16.97 21 12 21C7.03 21 3 19.88 3 18.5V5.5C3 4.13 7.03 3 12 3M12 5C8.13 5 5 5.89 5 7V10C5 11.11 8.13 12 12 12C15.87 12 19 11.11 19 10V7C19 5.89 15.87 5 12 5M12 14C8.13 14 5 14.89 5 16V17C5 18.11 8.13 19 12 19C15.87 19 19 18.11 19 17V16C19 14.89 15.87 14 12 14Z"/>
                     </svg>
                     Data
                 </a>
-                <div id="data-submenu" class="nav-submenu">
+                <div id="data-submenu" class="nav-submenu active">
                     <div class="layer-item">
-                        <input type="checkbox" id="batimetria-layer" onchange="toggleLayer('batimetria')">
-                        <div class="toggle-switch"></div>
-                        <label for="batimetria-layer">Batimetria</label>
+                        <div class="layer-item-controls">
+                            <input type="checkbox" id="batimetria-layer" onchange="toggleLayer('batimetria')">
+                            <div class="toggle-switch"></div>
+                            <label for="batimetria-layer">Batimetria</label>
+                        </div>
+                        <div class="layer-filter">
+                            <div class="filter-group">
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="batimetria-0-50" onchange="applyLayerFilter('batimetria', '0-50', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="batimetria-0-50">0-50m</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="batimetria-50-100" onchange="applyLayerFilter('batimetria', '50-100', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="batimetria-50-100">50-100m</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="batimetria-100+" onchange="applyLayerFilter('batimetria', '100+', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="batimetria-100+">100m+</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="layer-item">
-                        <input type="checkbox" id="foz-rios-layer" onchange="toggleLayer('foz-rios')">
-                        <div class="toggle-switch"></div>
-                        <label for="foz-rios-layer">Foz de Rios</label>
+                        <div class="layer-item-controls">
+                            <input type="checkbox" id="foz-rios-layer" onchange="toggleLayer('foz-rios')">
+                            <div class="toggle-switch"></div>
+                            <label for="foz-rios-layer">Foz de Rios</label>
+                        </div>
+                        <div class="layer-filter">
+                            <div class="filter-group">
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="foz-rios-principal" onchange="applyLayerFilter('foz-rios', 'principal', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="foz-rios-principal">Principais</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="foz-rios-secundario" onchange="applyLayerFilter('foz-rios', 'secundario', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="foz-rios-secundario">Secundários</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="layer-item">
-                        <input type="checkbox" id="municipios-layer" onchange="toggleLayer('municipios')">
-                        <div class="toggle-switch"></div>
-                        <label for="municipios-layer">Municípios Costeiros</label>
+                        <div class="layer-item-controls">
+                            <input type="checkbox" id="municipios-layer" onchange="toggleLayer('municipios')">
+                            <div class="toggle-switch"></div>
+                            <label for="municipios-layer">Municípios Costeiros</label>
+                        </div>
+                        <div class="layer-filter">
+                            <div class="filter-group">
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="municipios-grande" onchange="applyLayerFilter('municipios', 'grande', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="municipios-grande">Grande porte</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="municipios-medio" onchange="applyLayerFilter('municipios', 'medio', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="municipios-medio">Médio porte</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="municipios-pequeno" onchange="applyLayerFilter('municipios', 'pequeno', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="municipios-pequeno">Pequeno porte</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="layer-item">
-                        <input type="checkbox" id="sensibilidade-litoral-layer" onchange="toggleLayer('sensibilidade-litoral')">
-                        <div class="toggle-switch"></div>
-                        <label for="sensibilidade-litoral-layer">Índice de Sensibilidade do Litoral</label>
+                        <div class="layer-item-controls">
+                            <input type="checkbox" id="sensibilidade-litoral-layer" onchange="toggleLayer('sensibilidade-litoral')">
+                            <div class="toggle-switch"></div>
+                            <label for="sensibilidade-litoral-layer">Índice de Sensibilidade do Litoral</label>
+                        </div>
+                        <div class="layer-filter">
+                            <div class="filter-group">
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="sensibilidade-baixa" onchange="applyLayerFilter('sensibilidade-litoral', 'baixa', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="sensibilidade-baixa">Baixa</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="sensibilidade-media" onchange="applyLayerFilter('sensibilidade-litoral', 'media', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="sensibilidade-media">Média</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="sensibilidade-alta" onchange="applyLayerFilter('sensibilidade-litoral', 'alta', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="sensibilidade-alta">Alta</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="layer-item">
-                        <input type="checkbox" id="bacias-sedimentares-layer" onchange="toggleLayer('bacias-sedimentares')">
-                        <div class="toggle-switch"></div>
-                        <label for="bacias-sedimentares-layer">Bacias Sedimentares</label>
+                        <div class="layer-item-controls">
+                            <input type="checkbox" id="bacias-sedimentares-layer" onchange="toggleLayer('bacias-sedimentares')">
+                            <div class="toggle-switch"></div>
+                            <label for="bacias-sedimentares-layer">Bacias Sedimentares</label>
+                        </div>
+                        <div class="layer-filter">
+                            <div class="filter-group">
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="bacias-ativa" onchange="applyLayerFilter('bacias-sedimentares', 'ativa', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="bacias-ativa">Ativas</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="bacias-inativa" onchange="applyLayerFilter('bacias-sedimentares', 'inativa', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="bacias-inativa">Inativas</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="layer-item">
-                        <input type="checkbox" id="terras-indigenas-layer" onchange="toggleLayer('terras-indigenas')">
-                        <div class="toggle-switch"></div>
-                        <label for="terras-indigenas-layer">Terras Indígenas</label>
+                        <div class="layer-item-controls">
+                            <input type="checkbox" id="terras-indigenas-layer" onchange="toggleLayer('terras-indigenas')">
+                            <div class="toggle-switch"></div>
+                            <label for="terras-indigenas-layer">Terras Indígenas</label>
+                        </div>
+                        <div class="layer-filter">
+                            <div class="filter-group">
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="terras-homologada" onchange="applyLayerFilter('terras-indigenas', 'homologada', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="terras-homologada">Homologadas</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="terras-demarcada" onchange="applyLayerFilter('terras-indigenas', 'demarcada', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="terras-demarcada">Demarcadas</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="terras-processo" onchange="applyLayerFilter('terras-indigenas', 'processo', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="terras-processo">Em processo</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="layer-item">
-                        <input type="checkbox" id="areas-quilombolas-layer" onchange="toggleLayer('areas-quilombolas')">
-                        <div class="toggle-switch"></div>
-                        <label for="areas-quilombolas-layer">Áreas Quilombolas</label>
+                        <div class="layer-item-controls">
+                            <input type="checkbox" id="areas-quilombolas-layer" onchange="toggleLayer('areas-quilombolas')">
+                            <div class="toggle-switch"></div>
+                            <label for="areas-quilombolas-layer">Áreas Quilombolas</label>
+                        </div>
+                        <div class="layer-filter">
+                            <div class="filter-group">
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="quilombolas-titulada" onchange="applyLayerFilter('areas-quilombolas', 'titulada', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="quilombolas-titulada">Tituladas</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="quilombolas-processo" onchange="applyLayerFilter('areas-quilombolas', 'processo', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="quilombolas-processo">Em processo</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="layer-item">
-                        <input type="checkbox" id="unidades-conservacao-layer" onchange="toggleLayer('unidades-conservacao')">
-                        <div class="toggle-switch"></div>
-                        <label for="unidades-conservacao-layer">Unidades de Conservação</label>
+                        <div class="layer-item-controls">
+                            <input type="checkbox" id="unidades-conservacao-layer" onchange="toggleLayer('unidades-conservacao')">
+                            <div class="toggle-switch"></div>
+                            <label for="unidades-conservacao-layer">Unidades de Conservação</label>
+                        </div>
+                        <div class="layer-filter">
+                            <div class="filter-group">
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="unidades-federal" onchange="applyLayerFilter('unidades-conservacao', 'federal', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="unidades-federal">Federal</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="unidades-estadual" onchange="applyLayerFilter('unidades-conservacao', 'estadual', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="unidades-estadual">Estadual</label>
+                                </div>
+                                <div class="filter-checkbox">
+                                    <input type="checkbox" id="unidades-municipal" onchange="applyLayerFilter('unidades-conservacao', 'municipal', this.checked)">
+                                    <span class="checkmark"></span>
+                                    <label for="unidades-municipal">Municipal</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <a href="#" class="nav-item">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
-                    </svg>
-                    Widgets
-                </a>
             </nav>
-
-            <!-- Conteúdo das Camadas removido - agora está no submenu -->
-            <div class="sidebar-content">
-            </div>
         </div>
 
         <div id="map"></div>
+
+        <!-- Modal de Pesquisa -->
+        <div id="search-modal" class="search-modal">
+            <div class="search-content">
+                <button class="close-search" onclick="closeSearchModal()">&times;</button>
+                <h3 style="margin-bottom: 15px; color: #00425C;">Pesquisar Camadas</h3>
+                <input type="text" id="search-input" class="search-input" placeholder="Digite para pesquisar..." onkeyup="searchLayers(this.value)">
+                <div id="search-results" class="search-results"></div>
+            </div>
+        </div>
 
         <script src="https://unpkg.com/maplibre-gl@4.1.0/dist/maplibre-gl.js" crossorigin></script>
         <script src="js/app.js"></script>

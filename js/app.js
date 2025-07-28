@@ -1,5 +1,6 @@
 let map;
 let layersData = {};
+let layerFilters = {}; // Para armazenar filtros aplicados
 
 // Configuração das camadas ArcGIS
 const layerConfigs = {
@@ -136,6 +137,54 @@ function initializeMap() {
 
 // Função para adicionar todos os controles do MapLibre
 function addAllControls() {
+    // Controle personalizado de camadas
+    class LayersControl {
+        onAdd(map) {
+            this._map = map;
+            this._container = document.createElement('div');
+            this._container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+            this._container.innerHTML = `
+                <button type="button" class="layers-control" onclick="toggleSidebar()" title="Camadas">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12,16L19.36,10.27L21,9L12,2L3,9L4.63,10.27M12,18.54L4.62,12.81L3,14.07L12,21.07L21,14.07L19.37,12.8L12,18.54Z"/>
+                    </svg>
+                </button>
+            `;
+            return this._container;
+        }
+        
+        onRemove() {
+            this._container.parentNode.removeChild(this._container);
+            this._map = undefined;
+        }
+    }
+    
+    // Controle personalizado de pesquisa
+    class SearchControl {
+        onAdd(map) {
+            this._map = map;
+            this._container = document.createElement('div');
+            this._container.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+            this._container.innerHTML = `
+                <button type="button" class="search-control" onclick="openSearchModal()" title="Pesquisar">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+                    </svg>
+                </button>
+            `;
+            return this._container;
+        }
+        
+        onRemove() {
+            this._container.parentNode.removeChild(this._container);
+            this._map = undefined;
+        }
+    }
+    
+    // Adicionar controles customizados primeiro
+    map.addControl(new LayersControl(), 'top-left');
+    map.addControl(new SearchControl(), 'top-left');
+
     // Controles de navegação (zoom in/out, compass)
     map.addControl(new maplibregl.NavigationControl({
         showCompass: true,
@@ -155,16 +204,32 @@ function addAllControls() {
     }), 'top-right');
 
     // Controle de geolocalização
-    map.addControl(new maplibregl.GeolocateControl({
+    const geolocateControl = new maplibregl.GeolocateControl({
         positionOptions: {
-            enableHighAccuracy: true
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 60000
         },
         fitBoundsOptions: {
-            maxZoom: 15
+            maxZoom: 16,
+            duration: 2000
         },
         trackUserLocation: true,
-        showAccuracyCircle: true
-    }), 'top-right');
+        showAccuracyCircle: true,
+        showUserHeading: true
+    });
+    
+    map.addControl(geolocateControl, 'top-right');
+    
+    // Adicionar eventos para feedback do usuário
+    geolocateControl.on('geolocate', function(e) {
+        console.log('Localização encontrada:', e.coords);
+    });
+    
+    geolocateControl.on('error', function(e) {
+        console.error('Erro de geolocalização:', e);
+        alert('Não foi possível acessar sua localização. Verifique se o acesso à localização está habilitado no seu navegador.');
+    });
 
     // Controle de pitch/rotação
     class TerrainControl {
@@ -493,38 +558,182 @@ function toggleSubmenu(submenuId) {
     }
 }
 
-// Função para zoom em todas as camadas ativas
-function fitToActiveLayers() {
-    const activeLayers = Object.keys(layersData).filter(layerId => {
-        const checkbox = document.getElementById(`${layerId}-layer`);
-        return checkbox && checkbox.checked;
-    });
-
-    if (activeLayers.length === 0) {
-        alert('Nenhuma camada ativa para ajustar o zoom');
-        return;
-    }
-
-    // Calcular bounds de todas as camadas ativas
-    let bounds = new maplibregl.LngLatBounds();
+// Função para alternar sidebar
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const body = document.body;
     
-    activeLayers.forEach(layerId => {
+    sidebar.classList.toggle('active');
+    body.classList.toggle('sidebar-open');
+}
+
+// Função para aplicar filtro nas camadas
+function applyLayerFilter(layerId, filterValue, isChecked) {
+    if (!layerFilters[layerId]) {
+        layerFilters[layerId] = [];
+    }
+    
+    if (isChecked) {
+        // Adicionar filtro se marcado
+        if (!layerFilters[layerId].includes(filterValue)) {
+            layerFilters[layerId].push(filterValue);
+        }
+    } else {
+        // Remover filtro se desmarcado
+        layerFilters[layerId] = layerFilters[layerId].filter(f => f !== filterValue);
+    }
+    
+    // Se a camada estiver ativa, reaplicar os dados com filtro
+    if (map.getLayer(layerId)) {
+        const originalData = layersData[layerId];
+        if (originalData && originalData.features) {
+            let filteredData = { ...originalData };
+            
+            if (layerFilters[layerId].length > 0) {
+                // Aplicar filtros baseado nos valores selecionados
+                filteredData.features = originalData.features.filter(feature => {
+                    const props = feature.properties;
+                    return layerFilters[layerId].some(filterValue => 
+                        Object.values(props).some(value => 
+                            String(value).toLowerCase().includes(filterValue.toLowerCase())
+                        )
+                    );
+                });
+            }
+            
+            // Atualizar source com dados filtrados
+            map.getSource(layerId).setData(filteredData);
+        }
+    }
+}
+
+// Função para abrir modal de pesquisa
+function openSearchModal() {
+    document.getElementById('search-modal').classList.add('active');
+    document.getElementById('search-input').focus();
+}
+
+// Função para fechar modal de pesquisa
+function closeSearchModal() {
+    document.getElementById('search-modal').classList.remove('active');
+    document.getElementById('search-input').value = '';
+    document.getElementById('search-results').innerHTML = '';
+}
+
+// Função para pesquisar camadas
+function searchLayers(query) {
+    const resultsDiv = document.getElementById('search-results');
+    resultsDiv.innerHTML = '';
+    
+    if (query.length < 2) return;
+    
+    const results = [];
+    
+    // Pesquisar nos nomes das camadas
+    Object.keys(layerConfigs).forEach(layerId => {
+        const config = layerConfigs[layerId];
+        if (config.name.toLowerCase().includes(query.toLowerCase())) {
+            results.push({
+                id: layerId,
+                name: config.name,
+                type: 'layer'
+            });
+        }
+    });
+    
+    // Pesquisar nas features das camadas carregadas
+    Object.keys(layersData).forEach(layerId => {
         const data = layersData[layerId];
         if (data && data.features) {
-            data.features.forEach(feature => {
-                if (feature.geometry.type === 'Point') {
-                    bounds.extend(feature.geometry.coordinates);
-                } else if (feature.geometry.type === 'Polygon') {
-                    feature.geometry.coordinates[0].forEach(coord => bounds.extend(coord));
-                } else if (feature.geometry.type === 'LineString') {
-                    feature.geometry.coordinates.forEach(coord => bounds.extend(coord));
+            data.features.forEach((feature, index) => {
+                const props = feature.properties;
+                if (props) {
+                    Object.values(props).forEach(value => {
+                        if (String(value).toLowerCase().includes(query.toLowerCase())) {
+                            results.push({
+                                id: `${layerId}-${index}`,
+                                name: `${layerConfigs[layerId].name}: ${value}`,
+                                type: 'feature',
+                                layerId: layerId,
+                                feature: feature
+                            });
+                        }
+                    });
                 }
             });
         }
     });
-
-    // Aplicar zoom
-    if (!bounds.isEmpty()) {
-        map.fitBounds(bounds, { padding: 50, duration: 1000 });
+    
+    // Mostrar resultados
+    results.slice(0, 10).forEach(result => {
+        const item = document.createElement('div');
+        item.className = 'search-result-item';
+        item.innerHTML = `<strong>${result.name}</strong>`;
+        item.onclick = function() {
+            if (result.type === 'layer') {
+                // Ativar camada e fechar modal
+                const checkbox = document.getElementById(`${result.id}-layer`);
+                if (checkbox && !checkbox.checked) {
+                    checkbox.click();
+                }
+                toggleSidebar();
+            } else if (result.type === 'feature') {
+                // Zoom para feature
+                if (result.feature.geometry.type === 'Point') {
+                    map.flyTo({
+                        center: result.feature.geometry.coordinates,
+                        zoom: 14,
+                        duration: 2000
+                    });
+                }
+            }
+            closeSearchModal();
+        };
+        resultsDiv.appendChild(item);
+    });
+    
+    if (results.length === 0) {
+        resultsDiv.innerHTML = '<div class="search-result-item">Nenhum resultado encontrado</div>';
     }
 }
+
+// Fechar modal ao clicar fora
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('search-modal');
+    if (e.target === modal) {
+        closeSearchModal();
+    }
+});
+
+// Fechar modal com ESC
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeSearchModal();
+        // Fechar sidebar também com ESC
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar.classList.contains('active')) {
+            toggleSidebar();
+        }
+    }
+});
+
+// Fechar sidebar ao clicar fora dela
+document.addEventListener('click', function(e) {
+    const sidebar = document.getElementById('sidebar');
+    const layersControl = document.querySelector('.layers-control');
+    const searchModal = document.getElementById('search-modal');
+    const body = document.body;
+    
+    // Fechar modal de pesquisa se clicar fora
+    if (e.target === searchModal) {
+        closeSearchModal();
+    }
+    
+    // Fechar sidebar se clicar fora dela e ela estiver aberta
+    if (sidebar.classList.contains('active') && 
+        !sidebar.contains(e.target) && 
+        !layersControl.contains(e.target)) {
+        sidebar.classList.remove('active');
+        body.classList.remove('sidebar-open');
+    }
+});
